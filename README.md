@@ -1,5 +1,5 @@
 # nuxt-chat
-A smart chat web app as a SaaS with subscription. Generates embeddable code for integration to any websites or web apps.
+A smart chat web app SaaS with subscription feature. Generates embeddable code for integration to any websites or web apps.
 Made with Laravel and Vue (Nuxt).
 
 ## Build Setup
