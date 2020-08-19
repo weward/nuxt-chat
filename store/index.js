@@ -3,6 +3,7 @@ export const state = () => ({
   notifSnackbar: {
     show: false,
     timeout: 5000,
+    color: 'primary',
     text: '',
   },
 })
@@ -17,5 +18,7 @@ export const mutations = {
     state.notifSnackbar.timeout =
       typeof data.timeout !== 'undefined' ? data.timeout : 5000
     state.notifSnackbar.text = typeof data.text !== 'undefined' ? data.text : ''
+    state.notifSnackbar.color =
+      typeof data.color !== 'undefined' ? data.color : 'primary'
   },
 }
