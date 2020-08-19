@@ -20,6 +20,17 @@
               ></v-text-field>
 
               <v-text-field
+                v-model.trim="name"
+                :error-messages="nameErrors"
+                label="Name *"
+                name="name"
+                prepend-icon="mdi-account"
+                type="text"
+                @input="$v.name.$touch()"
+                @blur="$v.name.$touch()"
+              ></v-text-field>
+
+              <v-text-field
                 id="company"
                 v-model.trim="company"
                 label="Company"
@@ -59,10 +70,14 @@
                 @blur="$v.terms.$touch()"
               >
                 <template slot="append"
-                  ><i>Do you agree to the<span v-html="termsLabel"></span></i
+                  ><i>Do you agree to the <span v-html="termsLabel"></span></i
                 ></template>
               </v-checkbox>
-              <div v-if="this.$v.terms.$dirty && !$v.terms.sameAs" class="v-messages theme--light error--text" role="alert">
+              <div
+                v-if="this.$v.terms.$dirty && !$v.terms.sameAs"
+                class="v-messages theme--light error--text"
+                role="alert"
+              >
                 <div class="v-messages__wrapper">
                   <div class="v-messages__message">
                     To continue, you must agree to the terms and conditions.
@@ -72,9 +87,9 @@
             </v-form>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="primary" text @click="cancelLink">Cancel</v-btn>
+            <v-btn color="primary" text :loading="loading" @click="cancelLink">Cancel</v-btn>
             <v-spacer></v-spacer>
-            <v-btn color="primary" text @click="submit">Register</v-btn>
+            <v-btn color="primary" text :loading="loading" @click="submit">Register</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -90,17 +105,24 @@ export default {
   layout: 'blank',
   mixins: [validationMixin],
   data: () => ({
+    loading: false,
     email: '',
+    name: '',
     company: '',
     password: '',
     confirm_password: '',
     terms: false,
     termsLabel: '<a href="/terms-and-conditions">terms and conditions</a>?',
+    emailError: '',
+    nameError: '',
   }),
   validations: {
     email: {
       required,
       email,
+    },
+    name: {
+      required,
     },
     password: {
       required,
@@ -120,7 +142,13 @@ export default {
       if (!this.$v.email.$dirty) return errors
       !this.$v.email.email && errors.push('Must be a valid email.')
       !this.$v.email.required && errors.push('Email is required.')
-      return errors
+      return this.emailError !== '' ? this.emailError : errors
+    },
+    nameErrors() {
+      const errors = []
+      if (!this.$v.name.$dirty) return errors
+      !this.$v.name.required && errors.push('Name is required.')
+      return this.nameError !== '' ? this.nameError : errors
     },
     passwordErrors() {
       const errors = []
@@ -154,6 +182,43 @@ export default {
     submit() {
       this.$v.$touch()
       if (!this.$v.$error) {
+        this.loading = true
+        this.$axios({
+          method: 'POST',
+          url: `${process.env.NUXT_ENV_API_URL}/register`,
+          data: {
+            email: this.email,
+            name: this.name,
+            company: this.company,
+            password: this.password,
+            confirm_password: this.confirm_password,
+          },
+        })
+          .then((res) => {
+            this.$router.push('/login')
+            this.$store.commit('notifSnackbar', {
+              text: res.data,
+              show: true,
+            })
+          })
+          .catch((err) => {
+            if (err.response.status === 422) {
+              const errors = err.response.data.errors
+              Object.keys(errors).forEach((key) => {
+                // this.nameError, etc...
+                this[`${key + 'Error'}`] = errors[key]
+              })
+            }
+
+            if (err.response.status === 500) {
+              this.$store.commit('app/notifSnackbar', {
+                show: true,
+                text: err.response.data,
+              })
+            }
+          }).finally(() => {
+            this.loading = false
+          })
       }
     },
   },
