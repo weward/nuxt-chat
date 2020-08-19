@@ -14,7 +14,21 @@
             </v-tooltip>
           </v-toolbar>
           <v-card-text>
-            <v-form>  
+            <v-alert type="error" v-if="error !== ''">
+              {{ error }}
+              <v-template>
+                <v-btn
+                  color="primary"
+                  text
+                  dark
+                  :loading="loading"
+                  @click="resendVerification"
+                >
+                  Resend Verification Email
+                </v-btn>
+              </v-template>
+            </v-alert>
+            <v-form>
               <v-text-field
                 v-model.trim="email"
                 :error-messages="emailErrors"
@@ -40,11 +54,17 @@
             </v-form>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="primary" text @click="forgotPasswordLink"
+            <v-btn
+              color="primary"
+              text
+              :loading="loading"
+              @click="forgotPasswordLink"
               >Forgot Password?</v-btn
             >
             <v-spacer></v-spacer>
-            <v-btn color="primary" text @click="login">Login</v-btn>
+            <v-btn color="primary" text :loading="loading" @click="login"
+              >Login</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-col>
@@ -60,6 +80,9 @@ export default {
   layout: 'blank',
   mixins: [validationMixin],
   data: () => ({
+    loading: false,
+    error: '',
+    user_id: '',
     email: '',
     password: '',
   }),
@@ -97,8 +120,46 @@ export default {
     login() {
       this.$v.$touch()
       if (!this.$v.$error) {
-        this.$router.push('/admin/dashboard')
+        this.loading = true
+        this.$store
+          .dispatch('auth/login', {
+            email: this.email,
+            password: this.password,
+          })
+          .then(() => {
+            this.$router.push('/admin/dashboard')
+          })
+          .catch((err) => {
+            this.error = err.response.data.message
+            this.user_id = err.response.data.user_id
+          })
+          .finally(() => {
+            this.loading = false
+          })
       }
+    },
+    resendVerification() {
+      this.loading = true
+      this.$axios({
+        method: 'GET',
+        url: `${process.env.NUXT_ENV_API_URL}/resend-verification-email/${this.user_id}`,
+      })
+        .then((res) => {
+          console.log(res.data)
+          this.$store.commit('notifSnackbar', {
+            text: res.data,
+            color: 'success',
+          })
+        })
+        .catch((err) => {
+          this.$store.commit('notifSnackbar', {
+            text: err.response.data,
+            color: 'error',
+          })
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
   },
 }
