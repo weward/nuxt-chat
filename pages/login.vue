@@ -8,7 +8,7 @@
             <v-spacer></v-spacer>
             <v-tooltip bottom>
               <template v-slot:activator="{ on }">
-                <v-btn color="success" @click="registerLink">Register</v-btn>
+                <v-btn color="success" :loading="loading" @click="registerLink">Register</v-btn>
               </template>
               <span>Source</span>
             </v-tooltip>
@@ -16,7 +16,7 @@
           <v-card-text>
             <v-alert type="error" v-if="error !== ''">
               {{ error }}
-              <v-template>
+              <v-template v-if="user_id !== ''">
                 <v-btn
                   color="primary"
                   text
@@ -50,6 +50,7 @@
                 type="password"
                 @input="$v.password.$touch()"
                 @blur="$v.password.$touch()"
+                @keyup.enter="login"
               ></v-text-field>
             </v-form>
           </v-card-text>
@@ -145,7 +146,6 @@ export default {
         url: `${process.env.NUXT_ENV_API_URL}/resend-verification-email/${this.user_id}`,
       })
         .then((res) => {
-          console.log(res.data)
           this.$store.commit('notifSnackbar', {
             text: res.data,
             color: 'success',
