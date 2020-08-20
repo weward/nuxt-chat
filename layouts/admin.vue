@@ -99,7 +99,14 @@ export default {
   },
   methods: {
     logout() {
-      this.$router.push('/login')
+      this.$store.dispatch('auth/logout')
+        .then(() => {
+          this.$router.push('/login')
+        }).catch(() => {
+          this.$store.commit('notifSnackbar', {
+            text: 'Failed to logout.'
+          })
+        })
     }
   }
 }
