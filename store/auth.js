@@ -22,6 +22,11 @@ export const actions = {
         },
       })
         .then((res) => {
+          this.$axios.setHeader(
+            'Authorization',
+            `Bearer ${res.data.access_token}`
+          )
+
           commit('authCredentials', res.data)
 
           resolve()
@@ -33,12 +38,17 @@ export const actions = {
   },
   logout({ commit }) {
     return new Promise((resolve, reject) => {
-      try {
-        commit('clearAuthCredentials')
-        resolve()
-      } catch (err) {
-        reject()
-      }
+      this.$axios({
+        method: 'GET',
+        url: `${process.env.NUXT_ENV_API_URL}/admin/logout`,
+      })
+        .then(() => {
+          commit('clearAuthCredentials')
+          resolve()
+        })
+        .catch(() => {
+          reject()
+        })
     })
   },
 }
@@ -49,6 +59,7 @@ export const mutations = {
 
     state.entity = user
     state.subscription_plan = data.subscription_plan
+    state.access_token = data.access_token
 
     // hash each key and value of user object
     const hashedUSerObj = {}
@@ -71,6 +82,7 @@ export const mutations = {
       hash('subscription_plan'),
       JSON.stringify(hashedSubscriptionPlanObj)
     )
+    localStorage.setItem(hash('access_token'), data.access_token)
   },
   clearAuthCredentials(state) {
     state.entity = {}
@@ -79,5 +91,6 @@ export const mutations = {
     // remove from localStorage
     localStorage.removeItem(unhash('entity'))
     localStorage.removeItem(unhash('subscription_plan'))
-  }
+    localStorage.removeItem(unhash('access_token'))
+  },
 }
