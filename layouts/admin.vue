@@ -43,7 +43,10 @@
     </v-app-bar>
     <v-main>
       <v-container>
+        
         <nuxt />
+
+        <notifSnackbar></notifSnackbar>
       </v-container>
     </v-main>
     <v-navigation-drawer v-model="rightDrawer" :right="right" temporary fixed>
@@ -73,6 +76,8 @@
 </template>
 
 <script>
+import notifSnackbar from '~/components/app/notifSnackbar'
+
 export default {
   data() {
     return {
@@ -90,12 +95,20 @@ export default {
           title: 'Inspire',
           to: '/inspire',
         },
+        {
+          icon: 'mdi-cash-usd',
+          title: 'Billing',
+          to: '/admin/billing',
+        },
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
       title: 'ChatApp',
     }
+  },
+  components: {
+    notifSnackbar,
   },
   methods: {
     logout() {
