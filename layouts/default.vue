@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar dark :clipped-left="clipped" fixed app color="primary">
-      <v-toolbar-title v-text="title"/>
+      <v-toolbar-title v-text="title" />
       <v-spacer />
       <nuxt-link
         to="/"
@@ -13,15 +13,18 @@
       >
         Home
       </nuxt-link>
-      <nuxt-link to="/about"
+      <nuxt-link
+        to="/about"
         :class="[
           { 'home-nav-link-active': $nuxt.$route.path == '/about' },
           'home-nav-link',
           'font-weight-bold',
-        ]">
+        ]"
+      >
         About
       </nuxt-link>
-      <nuxt-link to="/pricing"
+      <nuxt-link
+        to="/pricing"
         :class="[
           { 'home-nav-link-active': $nuxt.$route.path == '/pricing' },
           'home-nav-link',
@@ -30,7 +33,9 @@
       >
         Pricing
       </nuxt-link>
-      <nuxt-link to="/register"
+      <nuxt-link
+        to="/register"
+        v-if="isLoggedIn"
         :class="[
           { 'home-nav-link-active': $nuxt.$route.path == '/register' },
           'home-nav-link',
@@ -39,7 +44,9 @@
       >
         Register
       </nuxt-link>
-      <nuxt-link to="/login"
+      <nuxt-link
+        to="/login"
+        v-if="isLoggedIn"
         :class="[
           { 'home-nav-link-active': $nuxt.$route.path == '/login' },
           'home-nav-link',
@@ -47,6 +54,17 @@
         ]"
       >
         Login
+      </nuxt-link>
+      <nuxt-link
+        to="/admin/dashboard"
+        v-if="!isLoggedIn"
+        :class="[
+          { 'home-nav-link-active': $nuxt.$route.path == '/admin/dashboard' },
+          'home-nav-link',
+          'font-weight-bold',
+        ]"
+      >
+        Admin
       </nuxt-link>
     </v-app-bar>
     <v-main>
@@ -61,6 +79,8 @@
 </template>
 
 <script>
+import { hash } from '~/assets/utils'
+
 export default {
   data() {
     return {
@@ -68,6 +88,11 @@ export default {
       fixed: false,
       title: 'ChatApp',
     }
+  },
+  computed: {
+    isLoggedIn() {
+      return localStorage.getItem(hash('access_token')) === null
+    },
   },
 }
 </script>

@@ -102,6 +102,7 @@ import { validationMixin } from 'vuelidate'
 import { required, email, sameAs, minLength } from 'vuelidate/lib/validators'
 
 export default {
+  middleware: 'guest',
   layout: 'blank',
   mixins: [validationMixin],
   data: () => ({
