@@ -13,6 +13,7 @@ export const mutations = {
     state.loading = bool
   },
   notifSnackbar(state, data) {
+    console.log('snackbar')
     state.notifSnackbar.show =
       typeof data.show !== 'undefined' ? data.show : false
     state.notifSnackbar.timeout =

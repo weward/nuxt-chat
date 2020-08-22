@@ -41,6 +41,9 @@ export const actions = {
       this.$axios({
         method: 'GET',
         url: `${process.env.NUXT_ENV_API_URL}/admin/logout`,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem(hash('access_token'))}`,
+        },
       })
         .then(() => {
           commit('clearAuthCredentials')
