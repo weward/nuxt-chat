@@ -96,6 +96,11 @@ export default {
           to: '/inspire',
         },
         {
+          icon: 'mdi-messages',
+          title: 'Chat',
+          to: '/admin/chat',
+        },
+        {
           icon: 'mdi-cash-usd',
           title: 'Billing',
           to: '/admin/billing',
