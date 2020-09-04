@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import Echo from 'laravel-echo'
 import Conversations from '~/components/app/chat/Conversations'
 import Queue from '~/components/app/chat/Queue'
 
@@ -28,6 +29,14 @@ export default {
       if (mutation.type === 'chat/toggleQueue') {
         this.showQueue = state.chat.showQueue
       }
+    })
+  },
+  mounted() {
+    window.Echo = new Echo({
+      broadcaster: 'pusher',
+      key: '6f7bd2bf7b1dbb5828a8',
+      cluster: 'ap1',
+      encrypted: true,
     })
   },
 }
