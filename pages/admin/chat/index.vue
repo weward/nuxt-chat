@@ -32,24 +32,6 @@ export default {
       }
     })
   },
-  mounted() {
-    window.Echo = new Echo({
-      broadcaster: 'pusher',
-      key: process.env.NUXT_ENV_PUSHER_KEY,
-      cluster: process.env.NUXT_ENV_PUSHER_CLUSTER,
-      encrypted: true,
-      // authEndpoint: '/api/broadcasting/auth'
-      wsHost: process.env.NUXT_ENV_WEBSOCKET_SERVER_HOST,
-      wsPort: process.env.NUXT_ENV_WEBSOCKET_SERVER_PORT,
-      forceTLS: false,
-      disableStats: true,
-    })
- 
-    // window.Echo.private(`test-channel`).listen('SendMessage', (e) => {
-    window.Echo.channel(`test-channel`).listen('.SendMessage', (e) => {
-      console.log(e.message)
-    })
-  },
 }
 </script>
 

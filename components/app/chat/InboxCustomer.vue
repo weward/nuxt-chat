@@ -2,23 +2,24 @@
   <div>
     <div
       :class="[
-        { secondary: cus.chat_app_id === activeCustomerNode },
+        { secondary: cus.chat_log_id === activeCustomerNode },
         'node-customer',
       ]"
       v-for="cus in data"
-      :key="cus.chat_app_id"
-      @click="inboxSelect(cus.chat_app_id)"
+      :key="cus.chat_log_id"
+      @click="inboxSelect(cus.chat_log_id)"
     >
       <span class="node-customer-name">
         {{ cus.name }}
       </span>
       <v-spacer></v-spacer>
-      <span>{{ cus.unread ? '[!]' : '' }}</span>
+      <span><v-icon v-if="cus.unread" color="red lighten-1">mdi-alert-box</v-icon></span>
     </div>
   </div>
 </template>
 
 <script>
+import { hash } from '~/assets/utils'
 export default {
   name: 'InboxCustomer',
   props: ['data'],
@@ -26,24 +27,27 @@ export default {
     activeCustomerNode: 0,
   }),
   methods: {
-    inboxSelect(chatAppId) {
-      // this.$refs[`node-${chatAppId}`];
-      // this.activeCustomerNode = chatAppId
+    inboxSelect(chatLogId) {
       this.$store
-        .dispatch('chat/setActiveCustomerNode', chatAppId)
+        .dispatch('chat/setActiveCustomerNode', chatLogId)
         .then((res) => {
+          window.Echo.leave(`chat.${chatLogId}`)
+          window.Echo.private(`chat.${chatLogId}`).listen(
+            '.SendMessage',
+            (e) => {
+              if (e.from === 0) {
+                this.$store.commit('chat/appendMessage', e)
+              }
+            }
+          )
+
           this.activeCustomerNode = this.$store.state.chat.activeCustomerNode
-          // dont put code for setting the message here...
-          // makee a subscribe function inside InboxMessage instead
-          // this is for stoping the loading indicator only
         })
         .catch(() => {
           this.activeCustomerNode = 0
           this.$store.commit('notifSnackbar', {
-            text: 'Failed to fetch message',
+            text: 'No message to show',
           })
-
-          // this.$store.commit('setMessages', [])
         })
     },
   },

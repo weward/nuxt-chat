@@ -1,35 +1,43 @@
 <template>
   <div>
-    <div v-if="typeof nodes.messages !== 'undefined'" class="msg-container">
+    <div v-if="showMessages === true" class="msg-container" ref="messages">
       <div
-        v-for="msg in nodes.messages"
-        :key="msg.id"
+        v-for="msg in messages"
+        :key="msg.myuuid"
         :class="[
-          { 'msg-bubble-you': msg.from_flag === 1 },
-          { 'msg-bubble-customer': msg.from_flag === 0 },
+          { 'msg-bubble-you': msg.from === 1 },
+          { 'msg-bubble-customer': msg.from === 0 },
           'msg-bubble',
         ]"
       >
         <b
           ><span class="sender-name">{{
-            msg.from_flag === 0 ? nodes.customer : 'You'
+            msg.from === 0 ? msg.customer : 'You'
           }}</span></b
         ><br />
-        <span class="tab">&nbsp;</span>{{ msg.text }}
+        <span class="tab">&nbsp;</span>{{ msg.message }}
       </div>
     </div>
-    <div v-if="typeof nodes.messages !== 'undefined'" class="msg-actions">
+    <div v-if="showMessages === true" class="msg-actions">
       <div class="msg">
-        <v-textarea
-          :rows="1"
+        <v-text-field
+          ref="inputmessage"
+          v-model="message"
           placeholder="Type your message here ..."
-        ></v-textarea>
+          @keyup.enter="sendMessage"
+          :disabled="loading"
+        ></v-text-field>
       </div>
       <div class="msg-send">
-        <v-btn class="primary" :block="this.$vuetify.breakpoint.smAndDown">Send</v-btn>
+        <v-btn
+          class="primary"
+          :block="this.$vuetify.breakpoint.smAndDown"
+          @click="sendMessage"
+          >Send</v-btn
+        >
       </div>
     </div>
-    <div v-if="typeof nodes.messages === 'undefined'" class="msg-container centered-parent">
+    <div v-if="showMessages === false" class="msg-container centered-parent">
       <div class="centered-content">
         No messages to show
       </div>
@@ -39,17 +47,80 @@
 </template>
 
 <script>
+import { hash } from '~/assets/utils'
 export default {
   name: 'InboxMessage',
   data: () => ({
-    nodes: '',
+    loading: false,
+    messages: [],
+    message: '',
+    showMessages: false,
   }),
+  methods: {
+    sendMessage() {
+      this.loading = true
+      this.$store
+        .dispatch('chat/sendMessage', {
+          message: this.message,
+          chat_log_id: this.$store.state.chat.activeCustomerNode,
+        })
+        .then(() => {
+          this.message = ''
+          // set notifier to unread
+          this.$store.commit(
+            'chat/setActiveCustomerNode',
+            this.$store.state.chat.activeCustomerNode
+          )
+        })
+        .catch(() => {
+          this.$store.commit('notifSnackbar', {
+            text: 'Failed.',
+          })
+        })
+        .finally(() => {
+          this.loading = false
+          // refocus on textbox
+          this.$nextTick(() => this.$refs.inputmessage.focus())
+        })
+    },
+  },
   created() {
     this.$store.subscribe((mutation, state) => {
       if (mutation.type === 'chat/setMessages') {
-        this.nodes = state.chat.messages
+        this.messages = state.chat.messages
+      }
+      if (mutation.type === 'chat/appendMessage') {
+        this.messages = state.chat.messages
+      }
+      if (mutation.type === 'chat/setActiveCustomerNode') {
+        this.showMessages = state.chat.activeCustomerNode !== null
+        if (
+          localStorage.getItem(
+            hash(`messages_${state.chat.activeCustomerNode}`)
+          ) !== null
+        ) {
+          // set component state
+          this.messages = JSON.parse(
+            localStorage.getItem(
+              hash(`messages_${state.chat.activeCustomerNode}`)
+            )
+          )
+          // set store state
+          this.$store.commit('chat/setMessages', this.messages)
+        }
       }
     })
+  },
+  updated() {
+    // focus on the latest message
+    if (this.messages.length > 0) {
+      this.$refs.messages.scrollTop = this.$refs.messages.scrollHeight
+      // save to local storage all messages of this channnel
+      localStorage.setItem(
+        hash(`messages_${this.$store.state.chat.activeCustomerNode}`),
+        JSON.stringify(this.messages)
+      )
+    }
   },
 }
 </script>
